@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>Software Numerico 2010</title>
+		<link type="text/css" href="css/ui-lightness/jquery-ui-1.8.custom.css" rel="stylesheet" />
+		<link type="text/css" href="css/style.css" rel="stylesheet" />	
+		<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+		<script type="text/javascript" src="js/jquery-ui-1.8.custom.min.js"></script>
+		<script type="text/javascript">
+			$(function(){
+				//Atributos
+				var mgauss = $("#matriz_gauss"),
+					vgauss = $("#vector_gauss"),
+					mjacobi = $("#matriz_jacobi"),
+					//mkrylov = $("#matriz_krylov");
+					todos = $([]).add(mgauss).add(mjacobi),
+					tips = $(".validateTips");
+				// Acordeon
+				$("#accordion").accordion({ header: "h3" });
+				function updateTips(t) {
+							tips
+								.text(t)
+								.addClass('ui-state-highlight');
+							setTimeout(function() {
+								tips.removeClass('ui-state-highlight', 1500);
+							}, 500);
+						}
+				function checkFormat(mat) {
+					if ( mat.val().length == 0) {
+								mat.addClass('ui-state-error');
+								updateTips("Tienes que escribir una matriz en el campo.");
+								return false;
+							} else {
+								return true;
+							}
+				
+						}
+				function validateMatFormat(mat) {
+					var corchete1 = mat.val().charAt(0),
+						corchete2 = mat.val().charAt(mat.val().length-1);
+					if(!(corchete1 == '[' && corchete2 == ']' && (mat.val().charAt(1) != ';' && mat.val().charAt(mat.val().length-2) != ';'))) {
+						mat.addClass('ui-state-error');
+						updateTips("El formato es inválido.");
+						return false;
+					} else {
+						return true;
+					}
+					
+				}
+				function generateMatrix(data) {
+					
+					var tableA = 'La Matriz A convertida es: ';
+						tableA += "<table>";
+					for(i = 0;i<data.length;i++) {
+						tableA += '<tr>';
+						for(j = 0;j<data[i].length;j++) {
+							tableA += '<td width = "100">';
+							tableA += data[i][j];
+							tableA += '</td>';
+						}
+						tableA += '</tr>';
+					}
+					tableA += '</table>';
+					return tableA;
+				}
+				$("#dialog-gauss, #dialog-jacobi, #dialog-bairstow").dialog({
+							autoOpen: false,
+							height: 500,
+							width: 600,
+							modal: true,
+							buttons: {
+								'Resolver' : function() {
+									var bValid = true;
+									todos.removeClass('ui-state-error');
+									
+									bValid = bValid && checkFormat(mgauss) && validateMatFormat(mgauss);
+									if(bValid) {
+										//enviando los datos a php
+										$.post("index.php", 
+											{ opcion : 'gauss', matriz : mgauss.val(), vector : vgauss.val()},
+										   	function(data){
+										     	$('#resultado').html(generateMatrix(data.matriz));
+										   }, "json");
+									}
+								},
+								Cancel: function() {
+									$(this).dialog('close');
+								}
+							},
+							close: function() {
+								todos.val('').removeClass('ui-state-error');
+							}
+						});
+				
+				$("#btn_gauss, #btn_jacobi, #btn_bairstow")
+					.button()
+					.click(function() {
+						$('#resultado').text('');
+						$('#dialog-'+$(this).attr('id').substring($(this).attr('id').indexOf('_')+1,$(this).attr('id').length)).dialog('open');
+					});
+					$("h2#gauss_intro, h2#jacobi_intro, h2#krylov_intro").click(function() {
+						//$(this).attr('class').toggle();
+						$('div#'+$(this).attr('id')).toggle();
+					});
+				});	
+		</script>
+	</head>
+	<body>
+	<div id="logo"></div>
+		<!-- Accordion -->
+		<h1>Introducción</h1>
+		<p>En este trabajos desarrollaremos una mierda de aplicación que sirva para resolver weas tan básicas como las cagas.</p>
+		<h2  id = "gauss_intro" title = "Presiona Aquí">Método Gauss</h2>
+		<div id = "gauss_intro" style = "display:none">
+			<p>El método de Gauss consiste en convertir un sistema normal de X ecuaciones con Y incógnitas en uno escalonado , en el que la 1ª ecuación tiene Y incógnitas , la 2ª tiene Y-1 incógnitas y así sucesivamente. De esta forma será fácil a partir de la última ecuación y ir subiendo para calcular el valor de todas las incognitas del sistema.</p>
+		</div>
+		
+		<h2 id = "jacobi_intro">Método Jacobi</h2>
+		<div id = "jacobi_intro" style = "display:none">
+			<p>Jacobi es uno de los métodos más antiguos para el cálculo de los valores propios de una matriz simétrica o compleja hermítica.</p>
+		</div>
+		<h2 id="krylov_intro">Método de Krylov/Bairstow</h2>
+		<div id="krylov_intro" style = "display:none">
+			<p>Este método nos servirá....</p>
+		</div>
+		<div id="accordion">
+			<div>
+					<h3><a href="#">Metodo de Gauss</a></h3>
+					<div>				
+							<h2>Como Ingresar Datos:</h2>
+							<p> Aquí tenis que ingresar la wea po loco de tal manera, como sigue 
+								<br /><code>A = [1 2 3;4 5 6;7 8 9]<br/></code>
+								En donde <code>A</code> SIEMPRE es <code>nxn</code>.
+							</p>
+							
+							<a href="#" id = "btn_gauss">Comenzar con Gauss</a>
+					</div>
+			</div>
+			<div>
+				<h3><a href="#">Metodo de Jacobi</a></h3>
+				<div>Pelao req! :D
+						<h2>Dialog</h2>
+						<a href="#" id = "btn_jacobi">Comenzar con Jacobi</a>
+				</div>
+			</div>
+			<div>
+				<h3><a href="#">Krylov y Bairstow</a></h3>
+				<div>Nam dui erat, auctor a, dignissim quis.
+					<h2>Dialog</h2>
+					<a href="#" id = "btn_bairstow">Comenzar con Bairstow</a>
+				
+				</div>
+			</div>
+		</div>
+		<div id = "dialog-gauss">
+			<p class="validateTips"></p>
+			<form>
+				<label for="orden">Ingresa la Matriz A: </label>
+				<input type="text" name="matriz" id="matriz_gauss" class="text ui-widget-content ui-corner-all" /><code>Ej: [1 2 3;4 5 6;7 8 9]</code>	<br />			
+				<label for="orden">Ingresa el Vector b: </label>
+				<input type="text" name="vector" id="vector_gauss" class="text ui-widget-content ui-corner-all" /><code>Ej: [1;2;3]</code>
+			</form>
+				<br/><label for="resultado">Resultado: </label><br/>
+				<div id="resultado"></div>
+		</div>		
+		<div id = "dialog-jacobi"> jacobi </div>		
+		<div id = "dialog-bairstow"> bairstow </div>		
+		<!-- Highlight / Error -->
+		<h2 class="demoHeaders">Highlight / Error</h2>
+		<div class="ui-widget">
+			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"> 
+				<p><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
+				<strong>Hey!</strong> Sample ui-state-highlight style.</p>
+			</div>
+		</div>
+		<br/>
+		<div class="ui-widget">
+			<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"> 
+				<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
+				<strong>Alert:</strong> Sample ui-state-error style.</p>
+			</div>
+		</div>
+	</body>
+</html>
+
+
